@@ -2,6 +2,7 @@ import {
   Plugin,
   MenuItem,
   TFile,
+  TFolder,
   WorkspaceLeaf,
   requireApiVersion,
   MarkdownView,
@@ -463,8 +464,13 @@ export default class IconizePlugin extends Plugin {
           });
 
           // Adds possible icons to the renamed file.
+          // Skip only if old path matched but new path does not (moved out of scope).
+          // If both match, re-add so the icon stays after rename.
           sortedRules.forEach((rule) => {
-            if (customRule.doesMatchPath(rule, oldPath)) {
+            if (
+              customRule.doesMatchPath(rule, oldPath) &&
+              !customRule.doesMatchPath(rule, file.path)
+            ) {
               return;
             }
 
@@ -495,9 +501,11 @@ export default class IconizePlugin extends Plugin {
         }),
       );
 
-      // Register create event for adding icons with custom rules to new files/folders.
+      // Register create event for adding icons with custom rules to new files.
+      // Folders are skipped here — the rename event handles them after name confirmation.
       this.registerEvent(
         this.app.vault.on('create', (file) => {
+          if (file instanceof TFolder) return;
           const sortedRules = customRule.getSortedRules(this);
           sortedRules.forEach((rule) => {
             customRule.add(this, rule, file, undefined);
