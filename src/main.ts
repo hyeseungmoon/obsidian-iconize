@@ -495,6 +495,16 @@ export default class IconizePlugin extends Plugin {
         }),
       );
 
+      // Register create event for adding icons with custom rules to new files/folders.
+      this.registerEvent(
+        this.app.vault.on('create', (file) => {
+          const sortedRules = customRule.getSortedRules(this);
+          sortedRules.forEach((rule) => {
+            customRule.add(this, rule, file, undefined);
+          });
+        }),
+      );
+
       // Register `layout-change` event for adding icons to tabs when moving a pane or
       // enabling reading mode.
       this.registerEvent(
